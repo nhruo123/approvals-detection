@@ -1,5 +1,5 @@
 from typing import Annotated
-from pydantic import AfterValidator, BaseModel, Field
+from pydantic import AfterValidator, BaseModel
 from web3 import Web3
 
 def _validate_address(addr:str):
@@ -20,4 +20,5 @@ class ApprovalStatus(BaseModel):
     symbol: str
     value: int
     address: str
+    exposure: float | None = None
     price: float | None = None

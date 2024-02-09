@@ -1,10 +1,8 @@
 from async_lru import alru_cache
 import httpx
 from datetime import datetime, timedelta
-import json
 
-_headers = {'accept': 'application/json'}
-
+_HEADERS = {'accept': 'application/json'}
 
 class GeckoService:
     def __init__(self) -> None:
@@ -14,7 +12,7 @@ class GeckoService:
     async def _get_coin_dict(self):
         result_dict = dict()
         async with httpx.AsyncClient() as client:
-            result = await client.get(f'{ self._url }/coins/list', headers=_headers)
+            result = await client.get(f'{ self._url }/coins/list', headers=_HEADERS)
             if result.is_error:
                 raise Exception("Failed to fetch coins data")
             self._next_coin_update = datetime.now() + timedelta(minutes=5)
@@ -24,7 +22,7 @@ class GeckoService:
 
             return result_dict
 
-    @alru_cache(maxsize=1024, ttl=60)
+    @alru_cache(maxsize=4816, ttl=60)
     async def get_coin_price(self, name: str, symbol: str):
         symbol = symbol.lower()
         COUNTER_CURRENCY = 'usd'
@@ -35,9 +33,11 @@ class GeckoService:
 
         coin_id = coin_dict[key]
         async with httpx.AsyncClient() as client:
-            result = await client.get(f'{self._url}/simple/price', headers=_headers, params={'ids': coin_id, 'vs_currencies': COUNTER_CURRENCY})
+            result = await client.get(f'{self._url}/simple/price', headers=_HEADERS, params={'ids': coin_id, 'vs_currencies': COUNTER_CURRENCY})
             if result.is_error:
-                raise Exception("Failed to fetch coin price")
+                # this is very easy to reach due to only 30 requests per minute so we will pretend that we just don't have the price
+                # TODO: ask if thats fine
+                return None
             result_body = result.json()
             if coin_id not in result_body:
                 return None

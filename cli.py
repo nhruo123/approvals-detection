@@ -1,12 +1,14 @@
 import click
 import os
 from dotenv import load_dotenv
-from services.web3service import web3service
+from services.web3service import Web3service
 import asyncio
+
 
 @click.group()
 def main():
     pass
+
 
 @main.command()
 @click.argument('address')
@@ -18,14 +20,10 @@ def approvals(address, infra_key):
         if not infra_key:
             print("Missing infra API key please pass it via the --infra_key option or define it via the INFRA_KEY env")
             exit(1)
-    infra = web3service(infra_key)
+    infra = Web3service(infra_key)
     result_list = asyncio.run(infra.get_all_approvals_events(address))
     for result in result_list:
-        display_name = result.address
-        if result.symbol:
-            display_name = result.symbol
-        elif result.name:
-            display_name = result.name 
+        display_name = result.symbol or result.name or result.address
         print(f"approval on {display_name} on amount of {result.value}")
 
 
