@@ -1,7 +1,7 @@
 import click
 import os
 from dotenv import load_dotenv
-from web3service import web3service
+from services.web3service import web3service
 import asyncio
 
 @click.group()

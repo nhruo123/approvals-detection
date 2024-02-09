@@ -1,17 +1,18 @@
-from pydantic import BaseModel, model_validator
+from typing import Annotated
+from pydantic import AfterValidator, BaseModel, Field
 from web3 import Web3
 
+def _validate_address(addr:str):
+    if not Web3.is_checksum_address(addr):
+        raise ValueError(
+            'All addresses must be a 20 hex string prefixed with 0x')
+    return addr
 
-class AddressesList(BaseModel):
-    addresses: list[str]
+Address = Annotated[str, AfterValidator(_validate_address)]
 
-    @model_validator(mode='after')
-    def check_is_address(self):
-        for address in self.addresses:
-            if not Web3.is_checksum_address(address):
-                raise ValueError(
-                    'All addresses must be a 20 hex string prefixed with 0x')
-        return self
+class ApprovalInput(BaseModel):
+    addresses: list[Address]
+    get_price: bool = False 
 
 
 class ApprovalStatus(BaseModel):
@@ -19,3 +20,4 @@ class ApprovalStatus(BaseModel):
     symbol: str
     value: int
     address: str
+    price: float | None = None

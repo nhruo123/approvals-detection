@@ -10,8 +10,8 @@ _abi = [{"inputs": [], "name": "name", "outputs": [{"internalType": "string", "n
 
 
 class web3service:
-    def __init__(self, API_TOKEN: str) -> None:
-        self._url = f'https://mainnet.infura.io/v3/{API_TOKEN}'
+    def __init__(self, api_token: str) -> None:
+        self._url = f'https://mainnet.infura.io/v3/{api_token}'
         self._w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self._url))
 
     @alru_cache(maxsize=512)
