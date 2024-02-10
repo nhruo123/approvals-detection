@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from web3 import AsyncWeb3
 from web3.exceptions import MismatchedABI
 import asyncio
+from aiohttp import client_exceptions
+from util import exceptions
 from async_lru import alru_cache
 from util.erc20abi import erc20abi
 
@@ -56,11 +58,17 @@ class Web3service:
 
     async def get_all_approvals_events(self, approving_address: str) -> list[ApprovalEvent]:
         if not self._w3.is_checksum_address(approving_address):
-            raise Exception("invalid address")
+            raise ValueError("invalid address")
         approving_address = \
             f"0x{approving_address[-_ADDER_LEN:].rjust(64, '0')}"
-
-        results = await self._w3.eth.get_logs({'fromBlock': 'earliest', "toBlock": 'latest', 'topics': [
-            _APPROVED_HASH, approving_address]})
-
+        try:
+            results = await self._w3.eth.get_logs({'fromBlock': 'earliest', "toBlock": 'latest', 'topics': [
+                _APPROVED_HASH, approving_address]})
+        except ValueError as err:
+            raise exceptions.ApiException(err)
+        except client_exceptions.ClientResponseError as err:
+            raise exceptions.ApiException(
+                f"Failed getting data with error code: {err.status}")
+        except client_exceptions.ClientError as err:
+            raise exceptions.NodeConnectionException()
         return await asyncio.gather(*list(map(self._build_approval_event, results)))

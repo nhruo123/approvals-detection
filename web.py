@@ -1,10 +1,9 @@
 import asyncio
-from aiohttp import ClientConnectorError
 from fastapi import FastAPI, Depends, HTTPException
 from functools import lru_cache
 from services.approval_service import get_approvals_for_address
 from services.gecko_service import GeckoService
-from util import config, models
+from util import config, models, exceptions
 from contextlib import asynccontextmanager
 from typing import Annotated
 from services.web3service import Web3service
@@ -43,10 +42,8 @@ async def get_approvals(input: models.ApprovalInput,
         results = await asyncio.gather(*[get_approvals_for_address(adder, web3service, gecko_service, input.get_price)
                                          for adder in input.addresses])
         return results
-    except ValueError as err:
-        # return a basic internal server error, there are too many error codes for now,
-        # TODO: implement better error reporting, follow https://docs.infura.io/api/networks/ethereum/json-rpc-methods#error-codes for docs
+    except exceptions.ApiException as err:
         raise HTTPException(status_code=500, detail=str(err))
-    except ClientConnectorError:
+    except exceptions.NodeConnectionException as err:
         raise HTTPException(
             status_code=500, detail="failed to reach node please try again later")
