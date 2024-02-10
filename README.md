@@ -1,3 +1,19 @@
+How to run
+====
+First install requirements `pip install -r .\requirements.txt`
+
+To run cli tool: `python .\cli.py approvals` 
+
+To run web server `uvicorn web:app`
+
+Test addresses
+----
+https://etherscan.io/address/0x005e20fcf757b55d6e27dea9ba4f90c0b03ef852
+https://etherscan.io/address/0xb4b28f9487cc25c26c655f04a37f974068920541
+
+Question Mission
+=====
+
 `Approval` is an event that `ERC20` defines as part of it's [standard](https://github.com/ethereum/ercs/blob/master/ERCS/erc-20.md#approval), this is an `event` that MUST be triggered on any successful call to the `approve` function. An event is a primitive in solidity that can be listened to by Ethereum clients such as a wep application.
 
 The [`approve`](https://github.com/ethereum/ercs/blob/master/ERCS/erc-20.md#approve) function allows ( or approve ) a spender to withdraw from your account multiple times, up to a set amount, `approve` should be used with the `transferFrom` function, which allows the approved address to transfer from you address to a target address.
