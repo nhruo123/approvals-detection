@@ -30,4 +30,5 @@ async def get_approvals_for_address(address: str, web3service: Web3service, geck
 
     (prices, balances) = await asyncio.gather(prices_futures, balances_futures)
 
-    return [build_approval_model(approval_event, price, balance, get_price) for (approval_event, price, balance) in zip(approvals, prices, balances)]
+    return [build_approval_model(approval_event, price, balance, get_price)
+            for (approval_event, price, balance) in zip(approvals, prices, balances) if balance is not None]

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from web3 import AsyncWeb3
+from web3.exceptions import MismatchedABI
 import asyncio
 from async_lru import alru_cache
 from util.erc20abi import erc20abi
@@ -17,12 +18,12 @@ class ApprovalEvent():
 
 
 class Web3service:
-    def __init__(self, api_token: str) -> None:
+    def __init__(self, api_token: str):
         self._url = f'https://mainnet.infura.io/v3/{api_token}'
         self._w3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(self._url))
 
     @alru_cache(maxsize=4816)
-    async def _get_token_symbol(self, address):
+    async def _get_token_symbol(self, address) -> str | None:
         contract = self._w3.eth.contract(address, abi=erc20abi)
         try:
             return await contract.functions.symbol().call()
@@ -30,7 +31,7 @@ class Web3service:
             return None
 
     @alru_cache(maxsize=4816)
-    async def _get_token_name(self, address):
+    async def _get_token_name(self, address) -> str | None:
         contract = self._w3.eth.contract(address, abi=erc20abi)
         try:
             return await contract.functions.name().call()
@@ -43,14 +44,14 @@ class Web3service:
         return ApprovalEvent(value=value, name=await self._get_token_name(address), symbol=await self._get_token_symbol(address), address=address)
 
     @alru_cache(maxsize=4816, ttl=60*2)
-    async def get_token_balance(self, token_address: str, holder_address: str):
-        # README: This function works under the assumption that the working contract is ERC-20
-        # This assumption is true as long as only ERC-20 contracts can emit Approval events
-        # in the case that it's false make sure to handle error cases
+    async def get_token_balance(self, token_address: str, holder_address: str) -> int | None:
         contract = self._w3.eth.contract(token_address, abi=erc20abi)
-        return await contract.functions.balanceOf(holder_address).call()
+        try:
+            return await contract.functions.balanceOf(holder_address).call()
+        except MismatchedABI:
+            return None
 
-    async def check_connection(self):
+    async def check_connection(self) -> bool:
         return await self._w3.is_connected()
 
     async def get_all_approvals_events(self, approving_address: str) -> list[ApprovalEvent]:

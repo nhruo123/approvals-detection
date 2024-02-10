@@ -2,13 +2,13 @@ import asyncio
 from aiohttp import ClientConnectorError
 from fastapi import FastAPI, Depends, HTTPException
 from functools import lru_cache
-
 from services.approval_service import get_approvals_for_address
 from services.gecko_service import GeckoService
 from util import config, models
 from contextlib import asynccontextmanager
 from typing import Annotated
 from services.web3service import Web3service
+
 
 @lru_cache
 def get_settings():
@@ -33,6 +33,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(lifespan=lifespan)
+
 
 @app.post("/approvals/", response_model_exclude_unset=True)
 async def get_approvals(input: models.ApprovalInput,
